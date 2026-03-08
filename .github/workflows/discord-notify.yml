@@ -10,7 +10,6 @@ jobs:
     steps:
       - name: Send Discord Notification
         run: |
-          BODY=$(echo '${{ github.event.release.body }}' | head -c 1000)
           curl -H "Content-Type: application/json" \
-          -d "{\"embeds\": [{\"title\": \"${{ github.event.release.name }}\", \"description\": \"**Ny opdatering udgivet!**\n\nVersion: ${{ github.event.release.tag_name }}\", \"color\": 3066993}]}" \
+          -d "{\"embeds\": [{\"title\": \"${{ github.event.release.name }}\", \"description\": \"**Ny opdatering!**\n\nVersion: ${{ github.event.release.tag_name }}\", \"color\": 3066993}]}" \
           ${{ secrets.DISCORD_WEBHOOK }}
