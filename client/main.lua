@@ -122,6 +122,7 @@ local function OpenEditor()
     local handlingValues = GetAllHandlingValues(vehicle)
 
     SetNuiFocus(true, true)
+    SetNuiFocusKeepInput(true)
     SendNUIMessage({
         action = 'open',
         vehicleName = vehicleName,
@@ -137,18 +138,19 @@ end
 -- Close editor
 local function CloseEditor()
     SetNuiFocus(false, false)
+    SetNuiFocusKeepInput(false)
     SendNUIMessage({action = 'close'})
     isOpen = false
 end
 
--- Register command (restricted = true when permission is set, uses ace: command.{Config.Command})
-RegisterCommand(Config.Command, function()
+-- Toggle editor (triggered from server)
+RegisterNetEvent('ab-handling:toggle', function()
     if isOpen then
         CloseEditor()
     else
         OpenEditor()
     end
-end, Config.Permission)
+end)
 
 -- NUI Callbacks
 RegisterNUICallback('close', function(_, cb)
@@ -240,6 +242,17 @@ CreateThread(function()
     while true do
         if isOpen then
             DisableControlAction(0, 200, true) -- ESC
+            DisableControlAction(0, 24, true)  -- Attack
+            DisableControlAction(0, 25, true)  -- Aim
+            DisableControlAction(0, 47, true)  -- Weapon
+            DisableControlAction(0, 58, true)  -- Weapon
+            DisableControlAction(0, 263, true) -- Melee
+            DisableControlAction(0, 264, true) -- Melee
+            DisableControlAction(0, 257, true) -- Attack 2
+            DisableControlAction(0, 140, true) -- Melee alt
+            DisableControlAction(0, 141, true) -- Melee alt
+            DisableControlAction(0, 142, true) -- Melee alt
+            DisableControlAction(0, 143, true) -- Melee alt
             if IsDisabledControlJustPressed(0, 200) then
                 CloseEditor()
             end

@@ -3,7 +3,7 @@ game 'gta5'
 
 author 'Ayebye Development'
 description 'ab-handling | Free real-time vehicle handling editor'
-version '1.0.0'
+version '1.1.0'
 lua54 'yes'
 
 ui_page 'html/index.html'

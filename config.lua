@@ -3,9 +3,8 @@ Config = {}
 -- Command to open the handling editor
 Config.Command = 'handling'
 
--- Restrict command to ace permissions (true/false)
--- When true, players need ace: command.handling (or whatever Config.Command is)
--- Example: add_ace group.admin command.handling allow
+-- Restrict command to admins only (true/false)
+-- When true, only players with admin permissions can use the editor
 -- Set to false to allow everyone
 Config.Permission = true
 
