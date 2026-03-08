@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { background: none !important; background-color: transparent !important; font-family: 'Segoe UI', Arial, sans-serif; overflow: hidden; color: #fff; }
+
+        #panel {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 390px;
+            max-height: calc(100vh - 40px);
+            background: rgba(12, 12, 16, 0.96);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.08);
+            display: none;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.05);
+            z-index: 10;
+        }
+
+        .hdr {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: grab;
+            user-select: none;
+        }
+        .hdr:active { cursor: grabbing; }
+        .hdr-left { display: flex; align-items: center; gap: 12px; pointer-events: none; }
+        .hdr-btns { display: flex; gap: 6px; pointer-events: auto; }
+
+        /* SVG Logo */
+        .logo {
+            width: 38px; height: 38px;
+            flex-shrink: 0;
+        }
+
+        .hdr-title { color: #fff; font-size: 13px; font-weight: 700; letter-spacing: 0.3px; }
+        .hdr-sub { color: #8b5cf6; font-size: 10px; font-family: monospace; font-weight: 600; }
+
+        /* Branding - integrity protected */
+        .ab-brand {
+            font-size: 9px;
+            color: rgba(255,255,255,0.25);
+            text-align: center;
+            padding: 8px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            letter-spacing: 0.5px;
+            user-select: none;
+        }
+
+        .btn {
+            padding: 7px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .btn-gray { background: rgba(255,255,255,0.08); color: #a1a1aa; }
+        .btn-gray:hover { background: rgba(255,255,255,0.12); color: #fff; }
+        .btn-purple { background: #6366f1; color: #fff; }
+        .btn-purple:hover { background: #4f46e5; }
+        .btn-x {
+            width: 30px; height: 30px; padding: 0;
+            background: rgba(255,255,255,0.05);
+            color: #71717a; font-size: 14px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 8px;
+        }
+        .btn-x:hover { background: rgba(239,68,68,0.2); color: #ef4444; }
+
+        .tabs {
+            display: flex;
+            gap: 3px;
+            padding: 10px 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .tabs::-webkit-scrollbar { display: none; }
+
+        .tab {
+            padding: 7px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            color: #52525b;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .tab:hover { background: rgba(255,255,255,0.05); color: #a1a1aa; }
+        .tab.on { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.08) transparent;
+        }
+        .content::-webkit-scrollbar { width: 4px; }
+        .content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+        .fld {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 6px;
+            transition: border-color 0.15s ease;
+        }
+        .fld:hover { border-color: rgba(99,102,241,0.3); }
+
+        .fld-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .fld-lbl { display: flex; align-items: center; gap: 6px; }
+        .fld-name { color: #d4d4d8; font-size: 12px; font-weight: 500; }
+
+        .fld-help {
+            width: 16px; height: 16px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 50%;
+            color: #52525b;
+            font-size: 9px;
+            font-weight: bold;
+            cursor: help;
+            position: relative;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .fld-help:hover { background: rgba(99,102,241,0.2); color: #8b5cf6; border-color: rgba(99,102,241,0.3); }
+
+        .fld-tip {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: 180px;
+            padding: 8px 10px;
+            background: #18181b;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: normal;
+            color: #a1a1aa;
+            line-height: 1.5;
+            opacity: 0;
+            visibility: hidden;
+            z-index: 99;
+            pointer-events: none;
+            transition: all 0.15s ease;
+        }
+        .fld-help:hover .fld-tip { opacity: 1; visibility: visible; }
+
+        .fld-val {
+            font-family: monospace;
+            font-size: 12px;
+            font-weight: 600;
+            color: #8b5cf6;
+            background: rgba(139,92,246,0.12);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        .fld-ctrl { display: flex; align-items: center; gap: 8px; }
+        .fld-range { font-family: monospace; font-size: 9px; color: #3f3f46; min-width: 28px; }
+        .fld-range.r { text-align: right; }
+
+        .slider {
+            flex: 1;
+            height: 5px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 3px;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px; height: 16px;
+            background: #6366f1;
+            border-radius: 50%;
+            cursor: grab;
+            box-shadow: 0 2px 8px rgba(99,102,241,0.4);
+            transition: transform 0.1s ease;
+        }
+        .slider::-webkit-slider-thumb:hover { transform: scale(1.15); }
+
+        .num {
+            width: 60px;
+            padding: 5px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 11px;
+            color: #fff;
+            text-align: center;
+        }
+        .num:focus { outline: none; border-color: #6366f1; }
+
+        /* Category colors */
+        [data-c="engine"] .fld-val { color: #f59e0b; background: rgba(245,158,11,0.12); }
+        [data-c="engine"] .slider::-webkit-slider-thumb { background: #f59e0b; box-shadow: 0 2px 8px rgba(245,158,11,0.4); }
+        [data-c="brakes"] .fld-val { color: #ef4444; background: rgba(239,68,68,0.12); }
+        [data-c="brakes"] .slider::-webkit-slider-thumb { background: #ef4444; box-shadow: 0 2px 8px rgba(239,68,68,0.4); }
+        [data-c="traction"] .fld-val { color: #22c55e; background: rgba(34,197,94,0.12); }
+        [data-c="traction"] .slider::-webkit-slider-thumb { background: #22c55e; box-shadow: 0 2px 8px rgba(34,197,94,0.4); }
+        [data-c="suspension"] .fld-val { color: #ec4899; background: rgba(236,72,153,0.12); }
+        [data-c="suspension"] .slider::-webkit-slider-thumb { background: #ec4899; box-shadow: 0 2px 8px rgba(236,72,153,0.4); }
+        [data-c="damage"] .fld-val { color: #f97316; background: rgba(249,115,22,0.12); }
+        [data-c="damage"] .slider::-webkit-slider-thumb { background: #f97316; box-shadow: 0 2px 8px rgba(249,115,22,0.4); }
+
+        #presetModal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .preset-save {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .preset-input {
+            flex: 1;
+            padding: 9px 14px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 12px;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .preset-input:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+
+        .preset-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .no-presets {
+            color: #3f3f46;
+            font-size: 12px;
+            text-align: center;
+            padding: 24px;
+        }
+
+        .preset-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 8px;
+            transition: border-color 0.15s ease;
+        }
+
+        .preset-item:hover {
+            border-color: rgba(99,102,241,0.3);
+        }
+
+        .preset-name {
+            color: #d4d4d8;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .preset-btns {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 10px;
+        }
+
+        .btn-red {
+            background: rgba(239,68,68,0.15);
+            color: #ef4444;
+        }
+
+        .btn-red:hover {
+            background: rgba(239,68,68,0.25);
+        }
+
+        .btn-green {
+            background: #22c55e;
+            color: #fff;
+        }
+
+        .btn-green:hover {
+            background: #16a34a;
+        }
+
+        #modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        .modal-box {
+            width: 540px;
+            max-height: 80vh;
+            background: rgba(12,12,16,0.98);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+        }
+        .modal-hdr {
+            padding: 14px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #fff;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .modal-body {
+            flex: 1;
+            padding: 18px;
+            overflow-y: auto;
+        }
+        .modal-body p { color: #71717a; font-size: 12px; margin-bottom: 12px; }
+        .modal-body code { background: rgba(99,102,241,0.15); padding: 2px 6px; border-radius: 4px; color: #8b5cf6; font-size: 11px; font-family: monospace; }
+        .modal-body pre {
+            background: #09090b;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 8px;
+            padding: 14px;
+            font-size: 10px;
+            color: #71717a;
+            overflow: auto;
+            max-height: 340px;
+            white-space: pre;
+            font-family: monospace;
+        }
+        .modal-ftr {
+            padding: 14px 18px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            justify-content: flex-end;
+        }
+    </style>
+</head>
+<body>
+    <div id="panel">
+        <div class="hdr" id="dragHandle">
+            <div class="hdr-left">
+                <svg class="logo" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="logoGrad" x1="0" y1="0" x2="38" y2="38" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stop-color="#6366f1"/>
+                            <stop offset="50%" stop-color="#8b5cf6"/>
+                            <stop offset="100%" stop-color="#a855f7"/>
+                        </linearGradient>
+                        <linearGradient id="shineGrad" x1="0" y1="0" x2="38" y2="38" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stop-color="rgba(255,255,255,0.2)"/>
+                            <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+                        </linearGradient>
+                    </defs>
+                    <rect width="38" height="38" rx="10" fill="url(#logoGrad)"/>
+                    <rect width="38" height="38" rx="10" fill="url(#shineGrad)"/>
+                    <text x="50%" y="52%" dominant-baseline="central" text-anchor="middle" fill="white" font-family="Segoe UI, Arial" font-size="13" font-weight="800" letter-spacing="-0.5">AB</text>
+                    <rect x="0.5" y="0.5" width="37" height="37" rx="9.5" stroke="rgba(255,255,255,0.15)" stroke-width="1" fill="none"/>
+                </svg>
+                <div>
+                    <div class="hdr-title">HANDLING EDITOR</div>
+                    <div class="hdr-sub" id="vehName">-</div>
+                </div>
+            </div>
+            <div class="hdr-btns">
+                <button class="btn btn-gray" id="btnPresets">Presets</button>
+                <button class="btn btn-gray" id="btnReset">Reset</button>
+                <button class="btn btn-purple" id="btnExport">Export</button>
+                <button class="btn btn-x" id="btnClose">&#x2715;</button>
+            </div>
+        </div>
+        <div class="tabs" id="tabs">
+            <button class="tab on" data-c="engine">Engine</button>
+            <button class="tab" data-c="brakes">Brakes</button>
+            <button class="tab" data-c="traction">Traction</button>
+            <button class="tab" data-c="suspension">Suspension</button>
+            <button class="tab" data-c="damage">Damage</button>
+        </div>
+        <div class="content" id="content"></div>
+        <div class="ab-brand" id="abBrand"></div>
+    </div>
+
+    <div id="modal" style="display:none">
+        <div class="modal-box">
+            <div class="modal-hdr">
+                <span>Export to handling.meta</span>
+                <button class="btn btn-x" id="btnCloseModal">&#x2715;</button>
+            </div>
+            <div class="modal-body">
+                <p>Copy this XML and replace the values in your <code>handling.meta</code> file:</p>
+                <pre id="xmlCode"></pre>
+            </div>
+            <div class="modal-ftr">
+                <button class="btn btn-purple" id="btnCopy">Copy to Clipboard</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="presetModal" style="display:none">
+        <div class="modal-box">
+            <div class="modal-hdr">
+                <span>Presets</span>
+                <button class="btn btn-x" id="btnClosePresets">&#x2715;</button>
+            </div>
+            <div class="modal-body">
+                <div class="preset-save">
+                    <input type="text" id="presetName" placeholder="Preset name..." class="preset-input">
+                    <button class="btn btn-purple" id="btnSavePreset">Save</button>
+                </div>
+                <div class="preset-list" id="presetList">
+                    <p class="no-presets">No saved presets</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let fields = [], values = {}, cat = 'engine', vehName = '', presets = {};
+
+        // --- Branding integrity ---
+        const _bn = [65,121,101,98,121,101,32,68,101,118,101,108,111,112,109,101,110,116];
+        const _bt = _bn.map(c => String.fromCharCode(c)).join('');
+        function _bv() {
+            const el = document.getElementById('abBrand');
+            if (!el || el.textContent !== _bt || el.offsetParent === null ||
+                getComputedStyle(el).display === 'none' || getComputedStyle(el).visibility === 'hidden' ||
+                getComputedStyle(el).opacity === '0' || el.offsetHeight < 1) {
+                document.getElementById('panel').style.display = 'none';
+                if (typeof fetch !== 'undefined') fetch('https://ab-handling/close', { method: 'POST' });
+            }
+        }
+        document.getElementById('abBrand').textContent = _bt;
+        setInterval(_bv, 2000);
+
+        // --- Drag functionality ---
+        (function() {
+            const panel = document.getElementById('panel');
+            const handle = document.getElementById('dragHandle');
+            let isDragging = false, startX, startY, startLeft, startTop;
+
+            handle.addEventListener('mousedown', function(e) {
+                if (e.target.closest('.hdr-btns')) return;
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                const rect = panel.getBoundingClientRect();
+                startLeft = rect.left;
+                startTop = rect.top;
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (!isDragging) return;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                let newLeft = startLeft + dx;
+                let newTop = startTop + dy;
+
+                newLeft = Math.max(0, Math.min(window.innerWidth - panel.offsetWidth, newLeft));
+                newTop = Math.max(0, Math.min(window.innerHeight - 50, newTop));
+
+                panel.style.left = newLeft + 'px';
+                panel.style.top = newTop + 'px';
+            });
+
+            document.addEventListener('mouseup', function() {
+                isDragging = false;
+            });
+        })();
+
+        // --- NUI Message Handler ---
+        window.addEventListener('message', e => {
+            if (e.data.action === 'open') {
+                fields = e.data.handlingFields;
+                values = e.data.handlingValues;
+                presets = e.data.presets || {};
+                vehName = e.data.vehicleName;
+                document.getElementById('vehName').textContent = vehName;
+                document.getElementById('panel').style.display = 'flex';
+                _bv();
+                render();
+            } else if (e.data.action === 'close') {
+                document.getElementById('panel').style.display = 'none';
+            }
+        });
+
+        function render() {
+            const c = document.getElementById('content');
+            c.innerHTML = '';
+            c.setAttribute('data-c', cat);
+
+            fields.filter(f => f.category === cat).forEach(f => {
+                const v = values[f.name] || 0;
+                const isGear = f.isGear || false;
+                const dv = isGear ? Math.floor(v) : v.toFixed(2);
+
+                const d = document.createElement('div');
+                d.className = 'fld';
+                d.innerHTML = `
+                    <div class="fld-top">
+                        <div class="fld-lbl">
+                            <span class="fld-name">${f.label}</span>
+                            ${f.tip ? `<div class="fld-help">?<div class="fld-tip">${f.tip}</div></div>` : ''}
+                        </div>
+                        <span class="fld-val" id="v-${f.name}">${dv}</span>
+                    </div>
+                    <div class="fld-ctrl">
+                        <span class="fld-range">${f.min}</span>
+                        <input type="range" class="slider" id="s-${f.name}" min="${f.min}" max="${f.max}" step="${f.step}" value="${v}">
+                        <span class="fld-range r">${f.max}</span>
+                        <input type="number" class="num" id="n-${f.name}" min="${f.min}" max="${f.max}" step="${f.step}" value="${dv}">
+                    </div>
+                `;
+
+                d.querySelector(`#s-${f.name}`).oninput = function() { upd(f, +this.value); };
+                const inp = d.querySelector(`#n-${f.name}`);
+                inp.oninput = function() {
+                    const x = +this.value;
+                    if (!isNaN(x)) upd(f, Math.max(f.min, Math.min(f.max, x)));
+                };
+                inp.onblur = function() {
+                    let x = +this.value;
+                    if (isNaN(x)) x = values[f.name] || 0;
+                    x = Math.max(f.min, Math.min(f.max, x));
+                    this.value = isGear ? Math.floor(x) : x.toFixed(2);
+                };
+
+                c.appendChild(d);
+            });
+        }
+
+        function upd(f, v) {
+            values[f.name] = v;
+            const isGear = f.isGear || false;
+            const dv = isGear ? Math.floor(v) : v.toFixed(2);
+            document.getElementById(`v-${f.name}`).textContent = dv;
+            document.getElementById(`s-${f.name}`).value = v;
+            document.getElementById(`n-${f.name}`).value = dv;
+            fetch('https://ab-handling/updateHandling', { method: 'POST', body: JSON.stringify({ field: f.name, value: v }) });
+        }
+
+        document.querySelectorAll('.tab').forEach(t => {
+            t.onclick = function() {
+                document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
+                this.classList.add('on');
+                cat = this.dataset.c;
+                render();
+            };
+        });
+
+        document.getElementById('btnClose').onclick = () => fetch('https://ab-handling/close', { method: 'POST' });
+
+        document.getElementById('btnReset').onclick = () => {
+            fetch('https://ab-handling/resetHandling', { method: 'POST' })
+                .then(r => r.json())
+                .then(d => { if (d && Object.keys(d).length) { values = d; render(); } });
+        };
+
+        document.getElementById('btnExport').onclick = () => {
+            fetch('https://ab-handling/exportHandling', { method: 'POST' })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.values) {
+                        const xml = generateXML(d.vehicleName, d.values);
+                        document.getElementById('xmlCode').textContent = xml;
+                        document.getElementById('modal').style.display = 'flex';
+                    }
+                });
+        };
+
+        function generateXML(name, vals) {
+            let xml = `<?xml version="1.0" encoding="UTF-8"?>
+
+<CHandlingDataMgr>
+  <HandlingData>
+    <Item type="CHandlingData">
+      <handlingName>${name}</handlingName>
+      <fMass value="${(vals.fMass || 1500).toFixed(6)}" />
+      <fInitialDragCoeff value="${(vals.fInitialDragCoeff || 2.5).toFixed(6)}" />
+      <fPercentSubmerged value="85.000000" />
+      <vecCentreOfMassOffset x="0.000000" y="0.000000" z="0.000000" />
+      <vecInertiaMultiplier x="1.000000" y="1.000000" z="1.500000" />
+      <fDriveBiasFront value="0.000000" />
+      <nInitialDriveGears value="${Math.floor(vals.nInitialDriveGears || 6)}" />
+      <fInitialDriveForce value="${(vals.fInitialDriveForce || 0.3).toFixed(6)}" />
+      <fDriveInertia value="${(vals.fDriveInertia || 1.0).toFixed(6)}" />
+      <fClutchChangeRateScaleUpShift value="${(vals.fClutchChangeRateScaleUpShift || 2.5).toFixed(6)}" />
+      <fClutchChangeRateScaleDownShift value="${(vals.fClutchChangeRateScaleDownShift || 2.5).toFixed(6)}" />
+      <fInitialDriveMaxFlatVel value="${(vals.fInitialDriveMaxFlatVel || 150).toFixed(6)}" />
+      <fBrakeForce value="${(vals.fBrakeForce || 1.0).toFixed(6)}" />
+      <fBrakeBiasFront value="0.500000" />
+      <fHandBrakeForce value="${(vals.fHandBrakeForce || 0.8).toFixed(6)}" />
+      <fSteeringLock value="${(vals.fSteeringLock || 35).toFixed(6)}" />
+      <fTractionCurveMax value="${(vals.fTractionCurveMax || 2.5).toFixed(6)}" />
+      <fTractionCurveMin value="${(vals.fTractionCurveMin || 2.0).toFixed(6)}" />
+      <fTractionCurveLateral value="${(vals.fTractionCurveLateral || 22.5).toFixed(6)}" />
+      <fTractionSpringDeltaMax value="0.150000" />
+      <fLowSpeedTractionLossMult value="${(vals.fLowSpeedTractionLossMult || 1.0).toFixed(6)}" />
+      <fCamberStiffnesss value="0.000000" />
+      <fTractionBiasFront value="${(vals.fTractionBiasFront || 0.48).toFixed(6)}" />
+      <fTractionLossMult value="1.000000" />
+      <fSuspensionForce value="${(vals.fSuspensionForce || 2.0).toFixed(6)}" />
+      <fSuspensionCompDamp value="${(vals.fSuspensionCompDamp || 1.5).toFixed(6)}" />
+      <fSuspensionReboundDamp value="${(vals.fSuspensionReboundDamp || 2.0).toFixed(6)}" />
+      <fSuspensionUpperLimit value="${(vals.fSuspensionUpperLimit || 0.1).toFixed(6)}" />
+      <fSuspensionLowerLimit value="${(vals.fSuspensionLowerLimit || -0.12).toFixed(6)}" />
+      <fSuspensionRaise value="${(vals.fSuspensionRaise || 0.0).toFixed(6)}" />
+      <fSuspensionBiasFront value="0.500000" />
+      <fAntiRollBarForce value="${(vals.fAntiRollBarForce || 1.0).toFixed(6)}" />
+      <fAntiRollBarBiasFront value="0.500000" />
+      <fRollCentreHeightFront value="0.360000" />
+      <fRollCentreHeightRear value="0.360000" />
+      <fCollisionDamageMult value="${(vals.fCollisionDamageMult || 1.0).toFixed(6)}" />
+      <fWeaponDamageMult value="${(vals.fWeaponDamageMult || 1.0).toFixed(6)}" />
+      <fDeformationDamageMult value="${(vals.fDeformationDamageMult || 0.8).toFixed(6)}" />
+      <fEngineDamageMult value="${(vals.fEngineDamageMult || 1.5).toFixed(6)}" />
+      <fPetrolTankVolume value="60.000000" />
+      <fOilVolume value="5.000000" />
+      <fSeatOffsetDistX value="0.000000" />
+      <fSeatOffsetDistY value="0.000000" />
+      <fSeatOffsetDistZ value="0.000000" />
+      <nMonetaryValue value="25000" />
+      <strModelFlags>440010</strModelFlags>
+      <strHandlingFlags>0</strHandlingFlags>
+      <strDamageFlags>0</strDamageFlags>
+      <AIHandling>AVERAGE</AIHandling>
+      <SubHandlingData>
+        <Item type="CCarHandlingData">
+          <fBackEndPopUpCarImpulseMult value="0.100000" />
+          <fBackEndPopUpBuildingImpulseMult value="0.030000" />
+          <fBackEndPopUpMaxDeltaSpeed value="0.600000" />
+        </Item>
+        <Item type="NULL" />
+        <Item type="NULL" />
+      </SubHandlingData>
+    </Item>
+  </HandlingData>
+</CHandlingDataMgr>`;
+            return xml;
+        }
+
+        document.getElementById('btnCloseModal').onclick = () => document.getElementById('modal').style.display = 'none';
+
+        // Presets
+        document.getElementById('btnPresets').onclick = () => {
+            renderPresets();
+            document.getElementById('presetModal').style.display = 'flex';
+        };
+
+        document.getElementById('btnClosePresets').onclick = () => document.getElementById('presetModal').style.display = 'none';
+
+        document.getElementById('btnSavePreset').onclick = () => {
+            const name = document.getElementById('presetName').value.trim();
+            if (!name) return;
+
+            fetch('https://ab-handling/savePreset', {
+                method: 'POST',
+                body: JSON.stringify({ name: name })
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) {
+                    presets = d.presets;
+                    document.getElementById('presetName').value = '';
+                    renderPresets();
+                }
+            });
+        };
+
+        function renderPresets() {
+            const list = document.getElementById('presetList');
+            const names = Object.keys(presets);
+
+            if (names.length === 0) {
+                list.innerHTML = '<p class="no-presets">No saved presets</p>';
+                return;
+            }
+
+            list.innerHTML = names.map(name => `
+                <div class="preset-item">
+                    <span class="preset-name">${name}</span>
+                    <div class="preset-btns">
+                        <button class="btn btn-green btn-sm" onclick="loadPreset('${name}')">Load</button>
+                        <button class="btn btn-red btn-sm" onclick="deletePreset('${name}')">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadPreset(name) {
+            fetch('https://ab-handling/loadPreset', {
+                method: 'POST',
+                body: JSON.stringify({ name: name })
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) {
+                    values = d.values;
+                    render();
+                    document.getElementById('presetModal').style.display = 'none';
+                }
+            });
+        }
+
+        function deletePreset(name) {
+            fetch('https://ab-handling/deletePreset', {
+                method: 'POST',
+                body: JSON.stringify({ name: name })
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) {
+                    presets = d.presets;
+                    renderPresets();
+                }
+            });
+        }
+
+        document.getElementById('btnCopy').onclick = function() {
+            navigator.clipboard.writeText(document.getElementById('xmlCode').textContent);
+            this.textContent = 'Copied!';
+            this.classList.remove('btn-purple');
+            this.classList.add('btn-green');
+            setTimeout(() => { this.textContent = 'Copy to Clipboard'; this.classList.remove('btn-green'); this.classList.add('btn-purple'); }, 1500);
+        };
+
+        document.onkeydown = e => {
+            if (e.key === 'Escape') {
+                if (document.getElementById('modal').style.display !== 'none') {
+                    document.getElementById('modal').style.display = 'none';
+                } else if (document.getElementById('presetModal').style.display !== 'none') {
+                    document.getElementById('presetModal').style.display = 'none';
+                } else {
+                    fetch('https://ab-handling/close', { method: 'POST' });
+                }
+            }
+        };
+    </script>
+</body>
+</html>
