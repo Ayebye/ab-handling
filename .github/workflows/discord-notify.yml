@@ -1,4 +1,4 @@
-name: Discord Release Notification
+name: Discord Notify
 
   on:
     release:
@@ -9,18 +9,12 @@ name: Discord Release Notification
       runs-on: ubuntu-latest
       steps:
         - name: Post to Discord
-          env:
-            DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           run: |
-            curl -H "Content-Type: application/json" \
-              -d "{
-                \"embeds\": [{
-                  \"title\": \"${{ github.event.release.name }}\",
-                  \"description\": \"${{ github.event.release.body }}\",
-                  \"url\": \"${{ github.event.release.html_url }}\",
-                  \"color\": 6366961,
-                  \"footer\": {\"text\": \"Ayebye Development\"},
-                  \"timestamp\": \"${{ github.event.release.published_at }}\"
-                }]
-              }" \
-              "$DISCORD_WEBHOOK"
+            TITLE="${{ github.event.release.name }}"
+            URL="${{ github.event.release.html_url }}"
+            BODY=$(echo '${{ toJSON(github.event.release.body) }}')
+            TIMESTAMP="${{ github.event.release.published_at }}"
+            curl -s -o /dev/null -H "Content-Type: application/json" \
+              -d "{\"embeds\":[{\"title\":\"${TITLE}\",\"description\":${BODY},\"url\":\"${URL}\",\"color\":6366961,\"fo
+  oter\":{\"text\":\"Ayebye Development\"},\"timestamp\":\"${TIMESTAMP}\"}]}" \
+              "${{ secrets.DISCORD_WEBHOOK }}"
