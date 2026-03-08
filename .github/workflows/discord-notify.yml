@@ -1,0 +1,17 @@
+name: Discord Release Notification
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Discord Notification
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d "{\"content\": \"**Ny opdatering udgivet!**\n Version: ${{ github.event.release.tag_name }}\n\n ${{ github.event.release.body }}\"}" \
+          $DISCORD_WEBHOOK
