@@ -9,9 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Discord Notification
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: |
+          BODY=$(echo '${{ github.event.release.body }}' | head -c 1000)
           curl -H "Content-Type: application/json" \
-          -d "{\"content\": \"**Ny opdatering udgivet!**\n Version: ${{ github.event.release.tag_name }}\n\n ${{ github.event.release.body }}\"}" \
-          $DISCORD_WEBHOOK
+          -d "{\"embeds\": [{\"title\": \"${{ github.event.release.name }}\", \"description\": \"**Ny opdatering udgivet!**\n\nVersion: ${{ github.event.release.tag_name }}\", \"color\": 3066993}]}" \
+          ${{ secrets.DISCORD_WEBHOOK }}
